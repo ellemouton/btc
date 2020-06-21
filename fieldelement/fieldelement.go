@@ -36,6 +36,10 @@ func (f *FieldElement) String() string {
 	return fmt.Sprintf("FieldElement_%v(%v)", f.Num, f.Prime)
 }
 
+func (f *FieldElement) Hex() string {
+	return fmt.Sprintf("%064x", f.Num)
+}
+
 func (f *FieldElement) Add(o *FieldElement) (*FieldElement, error) {
 	if f.Prime.Cmp(o.Prime) != 0 {
 		return nil, errors.New("Cant add numbers of different fields")

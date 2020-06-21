@@ -131,8 +131,8 @@ func TestAdd(t *testing.T) {
 
 			p3, err := p1.Add(p2)
 			require.NoError(t, err)
-			require.Equal(t, a, p3.a)
-			require.Equal(t, b, p3.b)
+			require.Equal(t, a, p3.A)
+			require.Equal(t, b, p3.B)
 
 			x, err := fieldelement.New(big.NewInt(test.p3.x), big.NewInt(test.prime))
 			require.NoError(t, err)
@@ -140,8 +140,8 @@ func TestAdd(t *testing.T) {
 			y, err := fieldelement.New(big.NewInt(test.p3.y), big.NewInt(test.prime))
 			require.NoError(t, err)
 
-			require.Equal(t, x, p3.x)
-			require.Equal(t, y, p3.y)
+			require.Equal(t, x, p3.X)
+			require.Equal(t, y, p3.Y)
 
 		})
 	}
@@ -168,11 +168,11 @@ func TestAdd2(t *testing.T) {
 
 	p3, err := p1.Add(p2)
 	require.NoError(t, err)
-	require.Equal(t, a, p3.a)
-	require.Equal(t, b, p3.b)
+	require.Equal(t, a, p3.A)
+	require.Equal(t, b, p3.B)
 
-	require.Equal(t, p2.x, p3.x)
-	require.Equal(t, p2.y, p3.y)
+	require.Equal(t, p2.X, p3.X)
+	require.Equal(t, p2.Y, p3.Y)
 }
 
 func TestAdd3(t *testing.T) {
@@ -202,11 +202,11 @@ func TestAdd3(t *testing.T) {
 
 	p3, err := p1.Add(p2)
 	require.NoError(t, err)
-	require.Equal(t, a, p3.a)
-	require.Equal(t, b, p3.b)
+	require.Equal(t, a, p3.A)
+	require.Equal(t, b, p3.B)
 
-	require.True(t, reflect.ValueOf(p3.x).IsNil())
-	require.True(t, reflect.ValueOf(p3.y).IsNil())
+	require.True(t, reflect.ValueOf(p3.X).IsNil())
+	require.True(t, reflect.ValueOf(p3.Y).IsNil())
 }
 
 func TestMul(t *testing.T) {

@@ -2,9 +2,11 @@ package s256point
 
 import (
 	"math/big"
+	"reflect"
 
 	"github.com/ellemouton/btc/point"
 	"github.com/ellemouton/btc/s256field"
+	"github.com/ellemouton/btc/signature"
 )
 
 var (
@@ -100,4 +102,55 @@ func (s *S256Point) Mul(c *big.Int) (*S256Point, error) {
 	}
 
 	return &S256Point{p}, nil
+}
+
+func (s *S256Point) Verify(hash []byte, sig *signature.Signature) (bool, error) {
+	z := hashToInt(hash, N)
+
+	exp := &big.Int{}
+	exp.Sub(N, big.NewInt(2))
+
+	s_inv := &big.Int{}
+	s_inv.Exp(sig.S, exp, N)
+
+	u := &big.Int{}
+	u.Mul(z, s_inv)
+	u.Mod(u, N)
+
+	v := &big.Int{}
+	v.Mul(sig.R, s_inv)
+	v.Mod(v, N)
+
+	uG, err := G.Mul(u)
+	if err != nil {
+		return false, err
+	}
+
+	vG, err := s.Mul(v)
+	if err != nil {
+		return false, err
+	}
+
+	total, err := uG.Add(vG)
+	if err != nil {
+		return false, err
+	}
+
+	return reflect.DeepEqual(total.X.Num, sig.R), nil
+}
+
+// This is borrowed from crypto/ecdsa.
+func hashToInt(hash []byte, n *big.Int) *big.Int {
+	orderBits := n.BitLen()
+	orderBytes := (orderBits + 7) / 8
+	if len(hash) > orderBytes {
+		hash = hash[:orderBytes]
+	}
+
+	ret := new(big.Int).SetBytes(hash)
+	excess := len(hash)*8 - orderBits
+	if excess > 0 {
+		ret.Rsh(ret, uint(excess))
+	}
+	return ret
 }

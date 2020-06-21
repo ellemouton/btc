@@ -10,19 +10,19 @@ import (
 )
 
 type Point struct {
-	x *fieldelement.FieldElement
-	y *fieldelement.FieldElement
-	a *fieldelement.FieldElement
-	b *fieldelement.FieldElement
+	X *fieldelement.FieldElement
+	Y *fieldelement.FieldElement
+	A *fieldelement.FieldElement
+	B *fieldelement.FieldElement
 }
 
 func New(x, y, a, b *fieldelement.FieldElement) (*Point, error) {
 	if x == nil && y == nil {
 		return &Point{
-			x: nil,
-			y: nil,
-			a: a,
-			b: b,
+			X: nil,
+			Y: nil,
+			A: a,
+			B: b,
 		}, nil
 	}
 
@@ -56,79 +56,79 @@ func New(x, y, a, b *fieldelement.FieldElement) (*Point, error) {
 	}
 
 	return &Point{
-		x: x,
-		y: y,
-		a: a,
-		b: b,
+		X: x,
+		Y: y,
+		A: a,
+		B: b,
 	}, nil
 }
 
 func (p *Point) Copy() *Point {
-	a := p.a.Copy()
-	b := p.b.Copy()
-	x := p.x.Copy()
-	y := p.y.Copy()
+	a := p.A.Copy()
+	b := p.B.Copy()
+	x := p.X.Copy()
+	y := p.Y.Copy()
 
 	return &Point{
-		a: a,
-		b: b,
-		x: x,
-		y: y,
+		A: a,
+		B: b,
+		X: x,
+		Y: y,
 	}
 }
 
 func (p *Point) String() string {
-	return fmt.Sprintf("(%v,%v)_%v_%v", p.x, p.y, p.a, p.b)
+	return fmt.Sprintf("(%v,%v)_%v_%v", p.X, p.Y, p.A, p.B)
 }
 
 func (p *Point) Add(o *Point) (*Point, error) {
-	if !reflect.DeepEqual(p.a, o.a) || !reflect.DeepEqual(p.b, o.b) {
+	if !reflect.DeepEqual(p.A, o.A) || !reflect.DeepEqual(p.B, o.B) {
 		return nil, errors.New(fmt.Sprintf("points %v, %v are not on the same curve", p, o))
 	}
 
-	if p.x == nil {
+	if p.X == nil {
 		return &Point{
-			x: o.x,
-			y: o.y,
-			a: o.a,
-			b: o.b,
+			X: o.X,
+			Y: o.Y,
+			A: o.A,
+			B: o.B,
 		}, nil
 	}
 
-	if o.x == nil {
+	if o.X == nil {
 		return &Point{
-			x: p.x,
-			y: p.y,
-			a: p.a,
-			b: p.b,
+			X: p.X,
+			Y: p.Y,
+			A: p.A,
+			B: p.B,
 		}, nil
 	}
 
-	if reflect.DeepEqual(p.x, o.x) && !reflect.DeepEqual(p.y, o.y) {
+	if reflect.DeepEqual(p.X, o.X) && !reflect.DeepEqual(p.Y, o.Y) {
 		return &Point{
-			x: nil,
-			y: nil,
-			a: p.a,
-			b: p.b,
+			X: nil,
+			Y: nil,
+			A: p.A,
+			B: p.B,
 		}, nil
 	}
 
-	if reflect.DeepEqual(p.x, o.x) && p.y.Num.Sign() == 0 {
+	if reflect.DeepEqual(p.X, o.X) && p.Y.Num.Sign() == 0 {
 		return &Point{
-			x: nil,
-			y: nil,
-			a: p.a,
-			b: p.b,
+			X: nil,
+			Y: nil,
+			A: p.A,
+			B: p.B,
 		}, nil
 	}
 
-	if !reflect.DeepEqual(p.x, o.x) {
-		s1, err := (o.y).Sub(p.y)
+	if !reflect.DeepEqual(p.X, o.X) {
+		s1, err := (o.Y).Sub(p.Y)
 		if err != nil {
 			return nil, err
 		}
 
-		s2, err := (o.x).Sub(p.x)
+		s2, err := (o.X).Sub(p.X)
 		if err != nil {
 			return nil, err
 		}
@@ -143,17 +143,17 @@ func (p *Point) Add(o *Point) (*Point, error) {
 			return nil, err
 		}
 
-		t2, err := t1.Sub(p.x)
+		t2, err := t1.Sub(p.X)
 		if err != nil {
 			return nil, err
 		}
 
-		x3, err := t2.Sub(o.x)
+		x3, err := t2.Sub(o.X)
 		if err != nil {
 			return nil, err
 		}
 
-		t3, err := (p.x).Sub(x3)
+		t3, err := (p.X).Sub(x3)
 		if err != nil {
 			return nil, err
 		}
@@ -163,21 +163,21 @@ func (p *Point) Add(o *Point) (*Point, error) {
 			return nil, err
 		}
 
-		y3, err := t4.Sub(p.y)
+		y3, err := t4.Sub(p.Y)
 		if err != nil {
 			return nil, err
 		}
 
 		return &Point{
-			x: x3,
-			y: y3,
-			a: p.a,
-			b: p.b,
+			X: x3,
+			Y: y3,
+			A: p.A,
+			B: p.B,
 		}, nil
 	}
 
 	// p == o
-	r, err := (p.x).Pow(big.NewInt(2))
+	r, err := (p.X).Pow(big.NewInt(2))
 	if err != nil {
 		return nil, err
 	}
@@ -192,12 +192,12 @@ func (p *Point) Add(o *Point) (*Point, error) {
 		return nil, err
 	}
 
-	r3, err := r2.Add(p.a)
+	r3, err := r2.Add(p.A)
 	if err != nil {
 		return nil, err
 	}
 
-	n, err := (p.y).Add(p.y)
+	n, err := (p.Y).Add(p.Y)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +212,7 @@ func (p *Point) Add(o *Point) (*Point, error) {
 		return nil, err
 	}
 
-	g, err := (p.x).Add(p.x)
+	g, err := (p.X).Add(p.X)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +222,7 @@ func (p *Point) Add(o *Point) (*Point, error) {
 		return nil, err
 	}
 
-	d, err := (p.x).Sub(x3)
+	d, err := (p.X).Sub(x3)
 	if err != nil {
 		return nil, err
 	}
@@ -232,16 +232,16 @@ func (p *Point) Add(o *Point) (*Point, error) {
 		return nil, err
 	}
 
-	y3, err := d1.Sub(p.y)
+	y3, err := d1.Sub(p.Y)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Point{
-		x: x3,
-		y: y3,
-		a: p.a,
-		b: p.b,
+		X: x3,
+		Y: y3,
+		A: p.A,
+		B: p.B,
 	}, nil
 }
 
@@ -249,7 +249,7 @@ func (p *Point) Mul(c *big.Int) (*Point, error) {
 	coef := new(big.Int).Set(c)
 	current := p.Copy()
 
-	result, err := New(nil, nil, p.a, p.b)
+	result, err := New(nil, nil, p.A, p.B)
 	if err != nil {
 		return nil, err
 	}

@@ -10,12 +10,12 @@ import (
 const P = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F"
 
 func New(n *big.Int) (*fieldelement.FieldElement, error) {
-	r, ok := new(big.Int).SetString(P, 16)
+	p, ok := new(big.Int).SetString(P, 16)
 	if !ok {
 		return nil, errors.New("couldnt convert hex string to big Int")
 	}
 
-	f, err := fieldelement.New(n, r)
+	f, err := fieldelement.New(n, p)
 	if err != nil {
 		return nil, err
 	}
