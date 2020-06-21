@@ -14,7 +14,11 @@ const (
 	Gy = "483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
 )
 
-func New(x, y *big.Int) (*point.Point, error) {
+type S256Point struct {
+	*point.Point
+}
+
+func New(x, y *big.Int) (*S256Point, error) {
 	a, err := s256field.New(big.NewInt(0))
 	if err != nil {
 		return nil, err
@@ -27,7 +31,7 @@ func New(x, y *big.Int) (*point.Point, error) {
 
 	if x == nil {
 		p, err := point.New(nil, nil, a, b)
-		return p, err
+		return &S256Point{p}, err
 	}
 
 	xf, err := s256field.New(x)
@@ -45,7 +49,34 @@ func New(x, y *big.Int) (*point.Point, error) {
 		return nil, err
 	}
 
-	return p, nil
+	return &S256Point{p}, nil
+}
+
+func (s *S256Point) Add(o *S256Point) (*S256Point, error) {
+	p, err := s.Point.Add(o.Point)
+	if err != nil {
+		return nil, err
+	}
+
+	return &S256Point{p}, nil
+}
+
+func (s *S256Point) Mul(c *big.Int) (*S256Point, error) {
+
+	n, err := GetN()
+	if err != nil {
+		return nil, err
+	}
+
+	coef := &big.Int{}
+	coef.Mod(c, n)
+
+	p, err := s.Point.Mul(coef)
+	if err != nil {
+		return nil, err
+	}
+
+	return &S256Point{p}, nil
 }
 
 func GetN() (*big.Int, error) {
@@ -57,7 +88,7 @@ func GetN() (*big.Int, error) {
 	return r, nil
 }
 
-func GetG() (*point.Point, error) {
+func GetG() (*S256Point, error) {
 	gx, ok := new(big.Int).SetString(Gx, 16)
 	if !ok {
 		return nil, errors.New("couldnt convert hex string to big Int")
