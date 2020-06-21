@@ -7,13 +7,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	g, err := GetG()
-	require.NoError(t, err)
-
-	n, err := GetN()
-	require.NoError(t, err)
-
-	r, err := g.Mul(n)
+	r, err := G.Mul(N)
 	require.NoError(t, err)
 
 	i, err := New(nil, nil)
