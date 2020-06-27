@@ -21,7 +21,7 @@ const (
 )
 
 type S256Point struct {
-	*point.Point
+	point.Point
 }
 
 func New(x, y *big.Int) (*S256Point, error) {
@@ -58,8 +58,8 @@ func New(x, y *big.Int) (*S256Point, error) {
 	return &S256Point{p}, nil
 }
 
-func (s *S256Point) Add(o *S256Point) (*S256Point, error) {
-	p, err := s.Point.Add(o.Point)
+func (s *S256Point) Add(o point.Point) (point.Point, error) {
+	p, err := s.Point.Add(o)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (s *S256Point) Add(o *S256Point) (*S256Point, error) {
 	return &S256Point{p}, nil
 }
 
-func (s *S256Point) Mul(c *big.Int) (*S256Point, error) {
+func (s *S256Point) Mul(c *big.Int) (point.Point, error) {
 	coef := &big.Int{}
 	coef.Mod(c, N)
 
@@ -96,18 +96,18 @@ func (s *S256Point) Sec(compressed bool) []byte {
 	if !compressed {
 		b := make([]byte, 0, PubKeyBytesLenUncompressed)
 		b = append(b, pubkeyUncompressed)
-		b = paddedAppend(32, b, s.X.Num.Bytes())
-		return paddedAppend(32, b, s.Y.Num.Bytes())
+		b = paddedAppend(32, b, s.GetX().GetNum().Bytes())
+		return paddedAppend(32, b, s.GetY().GetNum().Bytes())
 	}
 
 	b := make([]byte, 0, PubKeyBytesLenCompressed)
-	if isOdd(s.Y.Num) {
+	if isOdd(s.GetY().GetNum()) {
 		b = append(b, pubkeyCompressedOdd)
 	} else {
 		b = append(b, pubkeyCompressedEven)
 	}
 
-	return paddedAppend(32, b, s.X.Num.Bytes())
+	return paddedAppend(32, b, s.GetX().GetNum().Bytes())
 }
 
 func (s *S256Point) SecString(compressed bool) string {
@@ -146,7 +146,7 @@ func (s *S256Point) Verify(hash []byte, sig *signature.Signature) (bool, error) 
 		return false, err
 	}
 
-	return reflect.DeepEqual(total.X.Num, sig.R), nil
+	return reflect.DeepEqual(total.GetX().GetNum(), sig.R), nil
 }
 
 // This is borrowed from crypto/ecdsa.

@@ -1,7 +1,6 @@
 package s256point
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -95,6 +94,6 @@ func TestTemp(t *testing.T) {
 	p, err := New(px, py)
 	require.NoError(t, err)
 
-	fmt.Println(p.SecString(true))
-	fmt.Println(p.SecString(false))
+	require.Equal(t, "02887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c", p.SecString(true))
+	require.Equal(t, "04887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34", p.SecString(false))
 }

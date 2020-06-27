@@ -50,16 +50,16 @@ func TestAdd(t *testing.T) {
 
 	f3, err := f1.Add(f2)
 	require.NoError(t, err)
-	require.Equal(t, big.NewInt(19), f3.Prime)
-	require.Equal(t, big.NewInt(8), f3.Num)
+	require.Equal(t, big.NewInt(19), f3.GetPrime())
+	require.Equal(t, big.NewInt(8), f3.GetNum())
 
 	f4, err := New(big.NewInt(16), big.NewInt(19))
 	require.NoError(t, err)
 
 	f5, err := f4.Add(f2)
 	require.NoError(t, err)
-	require.Equal(t, big.NewInt(19), f5.Prime)
-	require.Equal(t, big.NewInt(2), f5.Num)
+	require.Equal(t, big.NewInt(19), f5.GetPrime())
+	require.Equal(t, big.NewInt(2), f5.GetNum())
 
 	f6, err := New(big.NewInt(3), big.NewInt(11))
 	require.NoError(t, err)
@@ -77,13 +77,13 @@ func TestSub(t *testing.T) {
 
 	f3, err := f1.Sub(f2)
 	require.NoError(t, err)
-	require.Equal(t, big.NewInt(19), f3.Prime)
-	require.Equal(t, big.NewInt(17), f3.Num)
+	require.Equal(t, big.NewInt(19), f3.GetPrime())
+	require.Equal(t, big.NewInt(17), f3.GetNum())
 
 	f4, err := f2.Sub(f1)
 	require.NoError(t, err)
-	require.Equal(t, big.NewInt(19), f4.Prime)
-	require.Equal(t, big.NewInt(2), f4.Num)
+	require.Equal(t, big.NewInt(19), f4.GetPrime())
+	require.Equal(t, big.NewInt(2), f4.GetNum())
 
 	f5, err := New(big.NewInt(3), big.NewInt(11))
 	require.NoError(t, err)

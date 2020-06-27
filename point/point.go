@@ -9,16 +9,27 @@ import (
 	"github.com/ellemouton/btc/fieldelement"
 )
 
-type Point struct {
-	X *fieldelement.FieldElement
-	Y *fieldelement.FieldElement
-	A *fieldelement.FieldElement
-	B *fieldelement.FieldElement
+type Point interface {
+	Add(Point) (Point, error)
+	Mul(*big.Int) (Point, error)
+	Copy() Point
+	String() string
+	GetA() fieldelement.FieldElement
+	GetB() fieldelement.FieldElement
+	GetX() fieldelement.FieldElement
+	GetY() fieldelement.FieldElement
 }
 
-func New(x, y, a, b *fieldelement.FieldElement) (*Point, error) {
+type point struct {
+	X fieldelement.FieldElement
+	Y fieldelement.FieldElement
+	A fieldelement.FieldElement
+	B fieldelement.FieldElement
+}
+
+func New(x, y, a, b fieldelement.FieldElement) (Point, error) {
 	if x == nil && y == nil {
-		return &Point{
+		return &point{
 			X: nil,
 			Y: nil,
 			A: a,
@@ -55,7 +66,7 @@ func New(x, y, a, b *fieldelement.FieldElement) (*Point, error) {
 		return nil, errors.New(fmt.Sprintf("(%d, %d) is not on the curve", x, y))
 	}
 
-	return &Point{
+	return &point{
 		X: x,
 		Y: y,
 		A: a,
@@ -63,13 +74,29 @@ func New(x, y, a, b *fieldelement.FieldElement) (*Point, error) {
 	}, nil
 }
 
-func (p *Point) Copy() *Point {
+func (p *point) GetA() fieldelement.FieldElement {
+	return p.A
+}
+
+func (p *point) GetB() fieldelement.FieldElement {
+	return p.B
+}
+
+func (p *point) GetX() fieldelement.FieldElement {
+	return p.X
+}
+
+func (p *point) GetY() fieldelement.FieldElement {
+	return p.Y
+}
+
+func (p *point) Copy() Point {
 	a := p.A.Copy()
 	b := p.B.Copy()
 	x := p.X.Copy()
 	y := p.Y.Copy()
 
-	return &Point{
+	return &point{
 		A: a,
 		B: b,
 		X: x,
@@ -77,26 +104,26 @@ func (p *Point) Copy() *Point {
 	}
 }
 
-func (p *Point) String() string {
+func (p *point) String() string {
 	return fmt.Sprintf("(%v,%v)_%v_%v", p.X, p.Y, p.A, p.B)
 }
 
-func (p *Point) Add(o *Point) (*Point, error) {
-	if !reflect.DeepEqual(p.A, o.A) || !reflect.DeepEqual(p.B, o.B) {
+func (p *point) Add(o Point) (Point, error) {
+	if !reflect.DeepEqual(p.A, o.GetA()) || !reflect.DeepEqual(p.B, o.GetB()) {
 		return nil, errors.New(fmt.Sprintf("points %v, %v are not on the same curve", p, o))
 	}
 
 	if p.X == nil {
-		return &Point{
-			X: o.X,
-			Y: o.Y,
-			A: o.A,
-			B: o.B,
+		return &point{
+			X: o.GetX(),
+			Y: o.GetY(),
+			A: o.GetA(),
+			B: o.GetB(),
 		}, nil
 	}
 
-	if o.X == nil {
-		return &Point{
+	if o.GetX() == nil {
+		return &point{
 			X: p.X,
 			Y: p.Y,
 			A: p.A,
@@ -104,8 +131,8 @@ func (p *Point) Add(o *Point) (*Point, error) {
 		}, nil
 	}
 
-	if reflect.DeepEqual(p.X, o.X) && !reflect.DeepEqual(p.Y, o.Y) {
-		return &Point{
+	if reflect.DeepEqual(p.X, o.GetX()) && !reflect.DeepEqual(p.Y, o.GetY()) {
+		return &point{
 			X: nil,
 			Y: nil,
 			A: p.A,
@@ -113,8 +140,8 @@ func (p *Point) Add(o *Point) (*Point, error) {
 		}, nil
 	}
 
-	if reflect.DeepEqual(p.X, o.X) && p.Y.Num.Sign() == 0 {
-		return &Point{
+	if reflect.DeepEqual(p.X, o.GetX()) && p.Y.GetNum().Sign() == 0 {
+		return &point{
 			X: nil,
 			Y: nil,
 			A: p.A,
@@ -122,13 +149,13 @@ func (p *Point) Add(o *Point) (*Point, error) {
 		}, nil
 	}
 
-	if !reflect.DeepEqual(p.X, o.X) {
-		s1, err := (o.Y).Sub(p.Y)
+	if !reflect.DeepEqual(p.X, o.GetX()) {
+		s1, err := (o.GetY()).Sub(p.Y)
 		if err != nil {
 			return nil, err
 		}
 
-		s2, err := (o.X).Sub(p.X)
+		s2, err := (o.GetX()).Sub(p.X)
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +175,7 @@ func (p *Point) Add(o *Point) (*Point, error) {
 			return nil, err
 		}
 
-		x3, err := t2.Sub(o.X)
+		x3, err := t2.Sub(o.GetX())
 		if err != nil {
 			return nil, err
 		}
@@ -168,7 +195,7 @@ func (p *Point) Add(o *Point) (*Point, error) {
 			return nil, err
 		}
 
-		return &Point{
+		return &point{
 			X: x3,
 			Y: y3,
 			A: p.A,
@@ -237,7 +264,7 @@ func (p *Point) Add(o *Point) (*Point, error) {
 		return nil, err
 	}
 
-	return &Point{
+	return &point{
 		X: x3,
 		Y: y3,
 		A: p.A,
@@ -245,7 +272,7 @@ func (p *Point) Add(o *Point) (*Point, error) {
 	}, nil
 }
 
-func (p *Point) Mul(c *big.Int) (*Point, error) {
+func (p *point) Mul(c *big.Int) (Point, error) {
 	coef := new(big.Int).Set(c)
 	current := p.Copy()
 

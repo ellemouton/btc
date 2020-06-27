@@ -6,135 +6,156 @@ import (
 	"math/big"
 )
 
-type FieldElement struct {
+type FieldElement interface {
+	GetNum() *big.Int
+	GetPrime() *big.Int
+	Copy() FieldElement
+	String() string
+	Hex() string
+	Add(FieldElement) (FieldElement, error)
+	Sub(FieldElement) (FieldElement, error)
+	Mul(FieldElement) (FieldElement, error)
+	Div(FieldElement) (FieldElement, error)
+	Pow(*big.Int) (FieldElement, error)
+}
+
+type Element struct {
 	Num   *big.Int
 	Prime *big.Int
 }
 
-func New(num *big.Int, prime *big.Int) (*FieldElement, error) {
+func New(num *big.Int, prime *big.Int) (FieldElement, error) {
 	if num.Cmp(prime) >= 0 || num.Sign() < 0 {
 		return nil, errors.New(fmt.Sprintf("Num %v not in field range 0 to %v -1", num, prime))
 	}
 
-	return &FieldElement{
+	return &Element{
 		Num:   num,
 		Prime: prime,
 	}, nil
 }
 
-func (f *FieldElement) Copy() *FieldElement {
-	num := new(big.Int).Set(f.Num)
-	prime := new(big.Int).Set(f.Prime)
+func (e *Element) GetNum() *big.Int {
+	return e.Num
+}
 
-	return &FieldElement{
+func (e *Element) GetPrime() *big.Int {
+	return e.Prime
+}
+
+func (e *Element) Copy() FieldElement {
+	num := new(big.Int).Set(e.Num)
+	prime := new(big.Int).Set(e.Prime)
+
+	return &Element{
 		Num:   num,
 		Prime: prime,
 	}
 }
 
-func (f *FieldElement) String() string {
-	return fmt.Sprintf("FieldElement_%v(%v)", f.Num, f.Prime)
+func (e *Element) String() string {
+	return fmt.Sprintf("FieldElement_%v(%v)", e.Num, e.Prime)
 }
 
-func (f *FieldElement) Hex() string {
-	return fmt.Sprintf("%064x", f.Num)
+func (e *Element) Hex() string {
+	return fmt.Sprintf("%064x", e.Num)
 }
 
-func (f *FieldElement) Add(o *FieldElement) (*FieldElement, error) {
-	if f.Prime.Cmp(o.Prime) != 0 {
+func (e *Element) Add(o FieldElement) (FieldElement, error) {
+	if e.Prime.Cmp(o.GetPrime()) != 0 {
 		return nil, errors.New("Cant add numbers of different fields")
 	}
 
 	num := &big.Int{}
-	num.Add(f.Num, o.Num)
-	num.Mod(num, f.Prime)
+	num.Add(e.Num, o.GetNum())
+	num.Mod(num, e.Prime)
 
 	if num.Sign() < 0 {
-		num.Add(num, f.Prime)
+		num.Add(num, e.Prime)
 	}
 
-	return &FieldElement{
+	return &Element{
 		Num:   num,
-		Prime: f.Prime,
+		Prime: e.Prime,
 	}, nil
 }
 
-func (f *FieldElement) Sub(o *FieldElement) (*FieldElement, error) {
-	if f.Prime.Cmp(o.Prime) != 0 {
+func (e *Element) Sub(o FieldElement) (FieldElement, error) {
+	if e.Prime.Cmp(o.GetPrime()) != 0 {
 		return nil, errors.New("Cant subtract numbers of different fields")
 	}
 
 	num := &big.Int{}
-	num.Sub(f.Num, o.Num)
-	num.Mod(num, f.Prime)
+	num.Sub(e.Num, o.GetNum())
+	num.Mod(num, e.Prime)
 
 	if num.Sign() < 0 {
-		num.Add(num, f.Prime)
+		num.Add(num, e.Prime)
 	}
 
-	return &FieldElement{
+	return &Element{
 		Num:   num,
-		Prime: f.Prime,
+		Prime: e.Prime,
 	}, nil
 }
 
-func (f *FieldElement) Mul(o *FieldElement) (*FieldElement, error) {
-	if f.Prime.Cmp(o.Prime) != 0 {
+func (e *Element) Mul(o FieldElement) (FieldElement, error) {
+	if e.Prime.Cmp(o.GetPrime()) != 0 {
 		return nil, errors.New("Cant subtract numbers of different fields")
 	}
 
 	num := &big.Int{}
-	num.Mul(f.Num, o.Num)
-	num.Mod(num, f.Prime)
+	num.Mul(e.Num, o.GetNum())
+	num.Mod(num, e.Prime)
 
 	if num.Sign() < 0 {
-		num.Add(num, f.Prime)
+		num.Add(num, e.Prime)
 	}
 
-	return &FieldElement{
+	return &Element{
 		Num:   num,
-		Prime: f.Prime,
+		Prime: e.Prime,
 	}, nil
 }
 
-func (f *FieldElement) Pow(e *big.Int) (*FieldElement, error) {
+func (e *Element) Pow(exp *big.Int) (FieldElement, error) {
 	p := &big.Int{}
-	p.Sub(f.Prime, big.NewInt(1))
+	p.Sub(e.Prime, big.NewInt(1))
 
 	n := &big.Int{}
-	n.Mod(e, p)
+	n.Mod(exp, p)
 
 	if n.Sign() < 0 {
 		n.Add(n, p)
 	}
 
 	num := &big.Int{}
-	num.Exp(f.Num, n, f.Prime)
+	num.Exp(e.Num, n, e.Prime)
 
 	if num.Sign() < 0 {
-		num.Add(num, f.Prime)
+		num.Add(num, e.Prime)
 	}
 
-	return &FieldElement{
+	return &Element{
 		Num:   num,
-		Prime: f.Prime,
+		Prime: e.Prime,
 	}, nil
 }
 
-func (f *FieldElement) Div(o *FieldElement) (*FieldElement, error) {
-	if f.Prime.Cmp(o.Prime) != 0 {
+func (e *Element) Div(o FieldElement) (FieldElement, error) {
+	if e.Prime.Cmp(o.GetPrime()) != 0 {
 		return nil, errors.New("Cant subtract numbers of different fields")
 	}
 
 	exp := &big.Int{}
-	exp.Sub(f.Prime, big.NewInt(2))
+	exp.Sub(e.Prime, big.NewInt(2))
 
 	n1, err := o.Pow(exp)
 	if err != nil {
 		return nil, err
 	}
 
-	n2, err := f.Mul(n1)
+	n2, err := e.Mul(n1)
 	if err != nil {
 		return nil, err
 	}
