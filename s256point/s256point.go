@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"reflect"
 
+	"github.com/ellemouton/btc/fieldelement"
 	"github.com/ellemouton/btc/point"
 	"github.com/ellemouton/btc/s256field"
 	"github.com/ellemouton/btc/signature"
@@ -13,6 +14,8 @@ import (
 var (
 	N *big.Int
 	G *S256Point
+	A s256field.S256Field
+	B s256field.S256Field
 )
 
 const (
@@ -24,38 +27,83 @@ type S256Point struct {
 	point.Point
 }
 
-func New(x, y *big.Int) (*S256Point, error) {
-	a, err := s256field.New(big.NewInt(0))
-	if err != nil {
-		return nil, err
-	}
-
-	b, err := s256field.New(big.NewInt(7))
-	if err != nil {
-		return nil, err
-	}
-
+func New(x, y s256field.S256Field) (*S256Point, error) {
 	if x == nil {
-		p, err := point.New(nil, nil, a, b)
+		p, err := point.New(nil, nil, A, B)
 		return &S256Point{p}, err
 	}
 
-	xf, err := s256field.New(x)
-	if err != nil {
-		return nil, err
-	}
-
-	yf, err := s256field.New(y)
-	if err != nil {
-		return nil, err
-	}
-
-	p, err := point.New(xf, yf, a, b)
+	p, err := point.New(x, y, A, B)
 	if err != nil {
 		return nil, err
 	}
 
 	return &S256Point{p}, nil
+}
+
+func Parse(b []byte) (point.Point, error) {
+	if b[0] == 4 {
+		x := (&big.Int{}).SetBytes(b[1:33])
+
+		xf, err := s256field.New(x)
+		if err != nil {
+			return nil, err
+		}
+
+		y := (&big.Int{}).SetBytes(b[33:65])
+		yf, err := s256field.New(y)
+		if err != nil {
+			return nil, err
+		}
+
+		return New(xf, yf)
+	}
+
+	isEven := (b[0]%2 == 0)
+	x, err := s256field.New((&big.Int{}).SetBytes(b[1:]))
+	if err != nil {
+		return nil, err
+	}
+
+	alpha, err := x.Pow(big.NewInt(3))
+	if err != nil {
+		return nil, err
+	}
+
+	alpha, err = alpha.Add(B)
+	if err != nil {
+		return nil, err
+	}
+
+	beta, err := s256field.Sqrt(alpha)
+	if err != nil {
+		return nil, err
+	}
+
+	var evenBeta fieldelement.FieldElement
+	var oddBeta fieldelement.FieldElement
+
+	m := (&big.Int{}).Mod(beta.GetNum(), big.NewInt(2))
+	if m.Cmp(big.NewInt(0)) == 0 {
+		evenBeta = beta
+		oB, err := s256field.New((&big.Int{}).Sub(s256field.P, beta.GetNum()))
+		if err != nil {
+			return nil, err
+		}
+		oddBeta = oB
+	} else {
+		oddBeta = beta
+		eB, err := s256field.New((&big.Int{}).Sub(s256field.P, beta.GetNum()))
+		if err != nil {
+			return nil, err
+		}
+		evenBeta = eB
+	}
+
+	if isEven {
+		return New(x, evenBeta)
+	}
+	return New(x, oddBeta)
 }
 
 func (s *S256Point) Add(o point.Point) (point.Point, error) {
@@ -172,9 +220,26 @@ func init() {
 	}
 	N = nVal
 
+	a, err := s256field.New(big.NewInt(0))
+	if err != nil {
+		panic("error initializing A")
+	}
+	A = a
+
+	b, err := s256field.New(big.NewInt(7))
+	if err != nil {
+		panic("error initializing B")
+	}
+	B = b
+
 	gxVal, ok := new(big.Int).SetString(gx, 16)
 	if !ok {
 		panic("invalid hex: " + gx)
+	}
+
+	gxFe, err := s256field.New(gxVal)
+	if err != nil {
+		panic("error initializing gxFe")
 	}
 
 	gyVal, ok := new(big.Int).SetString(gy, 16)
@@ -182,7 +247,12 @@ func init() {
 		panic("invalid hex: " + gy)
 	}
 
-	gPoint, err := New(gxVal, gyVal)
+	gyFe, err := s256field.New(gyVal)
+	if err != nil {
+		panic("error initializing gyFe")
+	}
+
+	gPoint, err := New(gxFe, gyFe)
 	if err != nil {
 		panic("error initializing point G")
 	}

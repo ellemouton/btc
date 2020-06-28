@@ -10,11 +10,11 @@ var P *big.Int
 
 const p = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F"
 
-type S256Field struct {
+type S256Field interface {
 	fieldelement.FieldElement
 }
 
-func New(n *big.Int) (fieldelement.FieldElement, error) {
+func New(n *big.Int) (S256Field, error) {
 	f, err := fieldelement.New(n, P)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,8 @@ func New(n *big.Int) (fieldelement.FieldElement, error) {
 	return f, nil
 }
 
-func (s *S256Field) Sqrt() (*S256Field, error) {
+//func (s *S256Field) Sqrt() (*S256Field, error) {
+func Sqrt(s S256Field) (S256Field, error) {
 	e := &big.Int{}
 	e.Add(P, big.NewInt(1))
 	e.Div(e, big.NewInt(4))
@@ -33,7 +34,7 @@ func (s *S256Field) Sqrt() (*S256Field, error) {
 		return nil, err
 	}
 
-	return &S256Field{fe}, nil
+	return fe, nil
 }
 
 func init() {

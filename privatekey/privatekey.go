@@ -25,7 +25,7 @@ func New(s *big.Int) (*PrivateKey, error) {
 
 	return &PrivateKey{
 		secret: s,
-		pubKey: p,
+		pubKey: p.(*s256point.S256Point),
 	}, nil
 }
 
@@ -43,7 +43,7 @@ func (p *PrivateKey) Sign(hash []byte) (*signature.Signature, error) {
 		return nil, err
 	}
 
-	r := R.X.Num
+	r := R.GetX().GetNum()
 
 	exp := &big.Int{}
 	exp.Sub(s256point.N, big.NewInt(2))

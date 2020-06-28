@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/ellemouton/btc/s256field"
 	"github.com/ellemouton/btc/signature"
 	"github.com/stretchr/testify/require"
 )
@@ -74,7 +75,13 @@ func TestVerify(t *testing.T) {
 			px, _ := new(big.Int).SetString(test.px, 16)
 			py, _ := new(big.Int).SetString(test.py, 16)
 
-			p, err := New(px, py)
+			pxf, err := s256field.New(px)
+			require.NoError(t, err)
+
+			pyf, _ := s256field.New(py)
+			require.NoError(t, err)
+
+			p, err := New(pxf, pyf)
 			require.NoError(t, err)
 
 			sig := &signature.Signature{R: r, S: s}
@@ -87,13 +94,44 @@ func TestVerify(t *testing.T) {
 	}
 }
 
-func TestTemp(t *testing.T) {
+func TestSec(t *testing.T) {
 	px, _ := new(big.Int).SetString("887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c", 16)
 	py, _ := new(big.Int).SetString("61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34", 16)
 
-	p, err := New(px, py)
+	pxf, err := s256field.New(px)
+	require.NoError(t, err)
+
+	pyf, _ := s256field.New(py)
+	require.NoError(t, err)
+
+	p, err := New(pxf, pyf)
 	require.NoError(t, err)
 
 	require.Equal(t, "02887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c", p.SecString(true))
 	require.Equal(t, "04887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34", p.SecString(false))
+}
+
+func TestParse(t *testing.T) {
+	px, _ := new(big.Int).SetString("887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c", 16)
+	py, _ := new(big.Int).SetString("61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34", 16)
+
+	pxf, err := s256field.New(px)
+	require.NoError(t, err)
+
+	pyf, _ := s256field.New(py)
+	require.NoError(t, err)
+
+	p1, err := New(pxf, pyf)
+	require.NoError(t, err)
+
+	bytesComp := p1.Sec(true)
+	bytesUncomp := p1.Sec(false)
+
+	p2, err := Parse(bytesComp)
+	require.NoError(t, err)
+	require.Equal(t, p1, p2)
+
+	p3, err := Parse(bytesUncomp)
+	require.NoError(t, err)
+	require.Equal(t, p1, p3)
 }
