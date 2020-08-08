@@ -14,7 +14,7 @@ import (
 
 type PrivateKey struct {
 	secret *big.Int
-	pubKey *s256point.S256Point
+	PubKey *s256point.S256Point
 }
 
 func New(s *big.Int) (*PrivateKey, error) {
@@ -25,7 +25,7 @@ func New(s *big.Int) (*PrivateKey, error) {
 
 	return &PrivateKey{
 		secret: s,
-		pubKey: p.(*s256point.S256Point),
+		PubKey: p.(*s256point.S256Point),
 	}, nil
 }
 

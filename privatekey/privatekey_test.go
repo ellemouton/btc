@@ -16,7 +16,7 @@ func TestSign(t *testing.T) {
 	sig, err := privKey.Sign(hash)
 	require.NoError(t, err)
 
-	valid, err := privKey.pubKey.Verify(hash, sig)
+	valid, err := privKey.PubKey.Verify(hash, sig)
 	require.NoError(t, err)
 	require.True(t, valid)
 }
