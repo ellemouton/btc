@@ -54,7 +54,7 @@ func (e *Element) Copy() FieldElement {
 }
 
 func (e *Element) String() string {
-	return fmt.Sprintf("FieldElement_%v(%v)", e.Num, e.Prime)
+	return fmt.Sprintf("FieldElement_%v(%v)", e.Prime, e.Num)
 }
 
 func (e *Element) Hex() string {

@@ -23,7 +23,6 @@ func New(n *big.Int) (S256Field, error) {
 	return f, nil
 }
 
-//func (s *S256Field) Sqrt() (*S256Field, error) {
 func Sqrt(s S256Field) (S256Field, error) {
 	e := &big.Int{}
 	e.Add(P, big.NewInt(1))
