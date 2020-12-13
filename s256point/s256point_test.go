@@ -84,7 +84,7 @@ func TestVerify(t *testing.T) {
 			p, err := New(pxf, pyf)
 			require.NoError(t, err)
 
-			sig := &signature.Signature{R: r, S: s}
+			sig := &signature.Signature{Rx: r, S: s}
 
 			valid, err := p.Verify(z.Bytes(), sig)
 			require.NoError(t, err)
@@ -101,7 +101,7 @@ func TestSec(t *testing.T) {
 	pxf, err := s256field.New(px)
 	require.NoError(t, err)
 
-	pyf, _ := s256field.New(py)
+	pyf, err := s256field.New(py)
 	require.NoError(t, err)
 
 	p, err := New(pxf, pyf)

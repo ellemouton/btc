@@ -64,7 +64,7 @@ func (p *PrivateKey) Sign(hash []byte) (*signature.Signature, error) {
 		s.Sub(s256point.N, s)
 	}
 
-	return &signature.Signature{R: r, S: s}, nil
+	return &signature.Signature{Rx: r, S: s}, nil
 }
 
 // nonceRFC6979 generates an ECDSA nonce (`k`) deterministically according to RFC 6979.

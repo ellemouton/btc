@@ -8,14 +8,15 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/ellemouton/btc/helpers"
-	"github.com/ellemouton/btc/privatekey"
-	"github.com/ellemouton/btc/s256point"
 	"math/big"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ellemouton/btc/helpers"
+	"github.com/ellemouton/btc/privatekey"
+	"github.com/ellemouton/btc/s256point"
 )
 
 const (
@@ -24,7 +25,7 @@ const (
 
 var (
 	XprivVersion, _ = hex.DecodeString("0488ade4")
-	XpubVersion, _ = hex.DecodeString("0488b21e")
+	XpubVersion, _  = hex.DecodeString("0488b21e")
 )
 
 func ExtendedPrivKeyFromSeed(s []byte) (*ExtendedKey, error) {
@@ -35,22 +36,22 @@ func ExtendedPrivKeyFromSeed(s []byte) (*ExtendedKey, error) {
 	}
 
 	I := hmac.Sum(nil)
-	
+
 	key := I[:32]
 	chaincode := I[32:]
 
 	if err = validatePrivateKey(key); err != nil {
 		return nil, err
 	}
-	
+
 	return &ExtendedKey{
-		Version: XprivVersion,
-		Key: key,
-		ChainCode:  chaincode,
-		Depth: 0,
+		Version:     XprivVersion,
+		Key:         key,
+		ChainCode:   chaincode,
+		Depth:       0,
 		FingerPrint: []byte{0x0, 0x0, 0x0, 0x0},
-		Index: 0,
-		IsPrivate: true,
+		Index:       0,
+		IsPrivate:   true,
 	}, nil
 }
 
@@ -67,13 +68,13 @@ func (priv *ExtendedKey) ExtendedPubKey() (*ExtendedKey, error) {
 	pubKey := privKey.PubKey.Sec(true)
 
 	return &ExtendedKey{
-		Version: XpubVersion,
-		Key: pubKey,
-		ChainCode:  priv.ChainCode,
-		Depth: priv.Depth,
+		Version:     XpubVersion,
+		Key:         pubKey,
+		ChainCode:   priv.ChainCode,
+		Depth:       priv.Depth,
 		FingerPrint: priv.FingerPrint,
-		Index: priv.Index,
-		IsPrivate: false,
+		Index:       priv.Index,
+		IsPrivate:   false,
 	}, nil
 }
 
@@ -110,10 +111,10 @@ func (ext *ExtendedKey) Child(i uint32) (*ExtendedKey, error) {
 	constant := hmac.Sum(nil)
 
 	child := &ExtendedKey{
-		Depth: ext.Depth + 1,
+		Depth:     ext.Depth + 1,
 		ChainCode: constant[32:],
 		IsPrivate: ext.IsPrivate,
-		Index: int64(i),
+		Index:     int64(i),
 	}
 
 	if ext.IsPrivate {
@@ -195,7 +196,6 @@ func addPrivKeys(key1 []byte, key2 []byte) []byte {
 	}
 	return b
 }
-
 
 func uint32Bytes(i uint32) []byte {
 	bytes := make([]byte, 4)

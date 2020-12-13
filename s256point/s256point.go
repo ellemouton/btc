@@ -41,6 +41,15 @@ func New(x, y s256field.S256Field) (*S256Point, error) {
 	return &S256Point{p}, nil
 }
 
+func ParseFromString(s string) (point.Point, error) {
+	b, err := hex.DecodeString(s)
+	if err != nil {
+		return nil, err
+	}
+
+	return Parse(b)
+}
+
 func Parse(b []byte) (point.Point, error) {
 	if b[0] == 4 {
 		x := (&big.Int{}).SetBytes(b[1:33])
@@ -176,7 +185,7 @@ func (s *S256Point) Verify(hash []byte, sig *signature.Signature) (bool, error) 
 	u.Mod(u, N)
 
 	v := &big.Int{}
-	v.Mul(sig.R, s_inv)
+	v.Mul(sig.Rx, s_inv)
 	v.Mod(v, N)
 
 	uG, err := G.Mul(u)
@@ -194,7 +203,7 @@ func (s *S256Point) Verify(hash []byte, sig *signature.Signature) (bool, error) 
 		return false, err
 	}
 
-	return reflect.DeepEqual(total.GetX().GetNum(), sig.R), nil
+	return reflect.DeepEqual(total.GetX().GetNum(), sig.Rx), nil
 }
 
 // This is borrowed from crypto/ecdsa.

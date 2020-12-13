@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/ellemouton/btc/hdkeys"
+	"github.com/tyler-smith/go-bip39"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
@@ -14,6 +15,8 @@ var (
 	xpub string
 	path string
 	seed string
+	mnemonic string
+	password string
 )
 
 func main() {
@@ -45,6 +48,18 @@ func main() {
 				Usage:       "seed (hex)",
 				Destination: &seed,
 			},
+			&cli.StringFlag{
+				Name:        "mnemonic",
+				Value:       "",
+				Usage:       "mnemonic words",
+				Destination: &mnemonic,
+			},
+			&cli.StringFlag{
+				Name:        "password",
+				Value:       "",
+				Usage:       "password",
+				Destination: &password,
+			},
 		},
 		Commands: []*cli.Command{
 			{
@@ -70,6 +85,12 @@ func main() {
 				Aliases: []string{"c"},
 				Usage:   "derive child given xpriv/xpub and path",
 				Action: getChild,
+			},
+			{
+				Name: "fromMnemonic",
+				Aliases: []string{"m"},
+				Usage: "derive extended key from mnemonic",
+				Action: genFromMnemonic,
 			},
 		},
 	}
@@ -128,6 +149,29 @@ func genFromSeed(_ *cli.Context) error {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	priv, err := hdkeys.ExtendedPrivKeyFromSeed(s)
+	if err != nil {
+		return err
+	}
+
+	pub, err := priv.ExtendedPubKey()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Priv:\t", base58.Encode(priv.Serialize()))
+	fmt.Println("Pub:\t", base58.Encode(pub.Serialize()))
+
+	return nil
+}
+
+func genFromMnemonic(_ *cli.Context) error {
+	if mnemonic == ""{
+		log.Fatal("must provide 'mnemonic' flag")
+	}
+
+	s := bip39.NewSeed(mnemonic, password)
 
 	priv, err := hdkeys.ExtendedPrivKeyFromSeed(s)
 	if err != nil {
